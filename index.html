@@ -3,169 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirTouch - Download Oficial</title>
+    <title>AirTouch - Download</title>
     <style>
-        :root {
-            --primary: #38bdf8;
-            --bg: #020617;
-            --card: #0f172a;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-        }
-
         body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
+            background-color: #000;
+            color: #0ff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            overflow-x: hidden;
-        }
-
-        .hero {
-            padding: 20px;
-            animation: slideUp 0.8s ease-out;
-        }
-
-        .icon-pulse {
-            font-size: 4.5rem;
-            margin-bottom: 15px;
-            display: inline-block;
-            filter: drop-shadow(0 0 15px var(--primary));
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            color: var(--primary);
+            height: 100vh;
             margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            text-align: center;
         }
-
-        .description {
-            color: var(--text-dim);
-            max-width: 320px;
-            margin: 15px auto 30px auto;
-            line-height: 1.5;
+        .container {
+            border: 2px solid #0ff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px #0ff;
         }
-
-        .download-card {
-            background: var(--card);
-            padding: 30px;
-            border-radius: 28px;
-            border: 1px solid #1e293b;
-            width: 85%;
-            max-width: 380px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-        }
-
+        h1 { font-size: 3rem; text-shadow: 0 0 10px #0ff; }
+        p { font-size: 1.2rem; margin-bottom: 30px; }
         .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary);
-            color: var(--bg);
-            padding: 18px;
-            border-radius: 16px;
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #0ff;
+            color: #000;
             text-decoration: none;
             font-weight: bold;
-            margin-bottom: 12px;
+            border-radius: 50px;
             transition: 0.3s;
-            font-size: 1rem;
+            box-shadow: 0 0 15px #0ff;
+            margin: 10px;
         }
-
-        .btn:active {
-            transform: scale(0.98);
+        .btn:hover {
+            transform: scale(1.1);
+            background-color: #fff;
+            box-shadow: 0 0 30px #fff;
         }
-
-        .btn-share {
-            background: #22c55e; /* Cor do WhatsApp */
-            color: white;
-        }
-
-        .btn-ios {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-dim);
-            border: 1px solid #334155;
-            cursor: not-allowed;
-        }
-
-        .pc-notice {
-            background: rgba(239, 68, 68, 0.1);
-            color: #f87171;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            margin-top: 15px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        footer {
-            margin-top: 40px;
-            font-size: 0.75rem;
-            color: #475569;
-            padding-bottom: 20px;
-        }
+        .wa-btn { background-color: #25d366; color: white; box-shadow: 0 0 15px #25d366; }
+        .ios { color: #555; font-size: 0.9rem; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="hero">
-        <div class="icon-pulse">🖊️</div>
+    <div class="container">
         <h1>AirTouch</h1>
-        <p class="description">Controle seu celular sem tocar na tela com a tecnologia <b>Dedo Invisível</b>.</p>
+        <p>Seu sistema de gestos neon já está pronto!</p>
+        
+        <a href="index.html" download="AirTouch.html" class="btn">DOWNLOAD AGORA</a>
+        
+        <br>
+        
+        <a href="https://wa.me/?text=Confira%20o%20AirTouch!%20O%20novo%20app%20de%20gestos:%20https://callebeeloi20-beep.github.io/AirTouch/" class="btn wa-btn">COMPARTILHAR WHATSAPP</a>
+        
+        <div class="ios">Versão para iPhone em breve</div>
     </div>
-
-    <div class="download-card">
-        <!-- Link para o APK -->
-        <a href="app/AirTouch.apk" class="btn">
-            Download para Android (.apk)
-        </a>
-
-        <!-- Botão de Compartilhar -->
-        <a href="#" class="btn btn-share" onclick="shareLink()">
-            Compartilhar via WhatsApp
-        </a>
-
-        <div class="btn btn-ios">
-            Em breve para iPhone (iOS)
-        </div>
-
-        <div class="pc-notice">
-            ⚠️ <b>Aviso:</b> Versão para Computador indisponível no momento. Lançamento previsto para breve!
-        </div>
-    </div>
-
-    <footer>
-        Desenvolvido por Callebe • 2026<br>
-        Previsão Super Mario 3: 2029 (Não oficial)
-    </footer>
-
-    <script>
-        function shareLink() {
-            const url = window.location.href;
-            const text = "Olha só o AirTouch, o app que eu estou criando para controlar o celular por gestos! Baixa aí: ";
-            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + url)}`;
-            window.open(whatsappUrl, '_blank');
-        }
-    </script>
 
 </body>
 </html>
