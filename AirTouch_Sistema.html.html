@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirTouch</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <style>
+        :root { --blue: #38bdf8; --bg: #020617; --green: #22c55e; --red: #ef4444; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: white; font-family: sans-serif; height: 100%; overflow: hidden; }
+        
+        /* Telas */
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; }
+        .active { display: flex; }
+
+        /* Rodapé Físico de Verdade */
+        .rodape-solido { position: fixed; background: var(--blue); z-index: 5000; display: none; box-shadow: 0 0 40px var(--blue); }
+        .rd-up { top: 0; left: 0; right: 0; height: 50px; border-radius: 0 0 25px 25px; }
+        .rd-down { bottom: 0; left: 0; right: 0; height: 50px; border-radius: 25px 25px 0 0; }
+        .rd-left { left: 0; top: 0; bottom: 0; width: 50px; border-radius: 0 25px 25px 0; }
+        .rd-right { right: 0; top: 0; bottom: 0; width: 50px; border-radius: 25px 0 0 25px; }
+
+        /* Camera & Circulo */
+        .cam-frame { position: relative; width: 270px; height: 270px; margin: 20px; border-radius: 50%; border: 4px solid #1e293b; overflow: hidden; background: #000; }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .aura { position: absolute; inset: 0; border: 4px solid var(--blue); border-radius: 50%; pointer-events: none; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.7; } }
+
+        /* Cards e Botoes */
+        .card { background: #0f172a; padding: 30px; border-radius: 32px; border: 1px solid #1e293b; width: 90%; max-width: 400px; }
+        button { background: var(--blue); color: #020617; border: none; padding: 18px; border-radius: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; font-size: 1.1rem; }
+        button:disabled { background: #1e293b; color: #475569; }
+
+        /* Interface de Configuração Simulada */
+        .sys-settings { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
+        .sys-bar { background: #1f2937; padding: 20px; display: flex; align-items: center; gap: 20px; font-size: 1.2rem; }
+        .sys-row { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid #374151; }
+        
+        .toggle-btn { width: 50px; height: 26px; background: #374151; border-radius: 13px; position: relative; cursor: pointer; transition: 0.3s; }
+        .toggle-btn.active { background: var(--green); }
+        .toggle-btn::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 3px; left: 4px; transition: 0.3s; }
+        .toggle-btn.active::after { left: 26px; }
+
+        .loader-ring { border: 5px solid #1e293b; border-top: 5px solid var(--blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- BARRAS DO SISTEMA -->
+    <div id="bar-up" class="rodape-solido rd-up"></div>
+    <div id="bar-down" class="rodape-solido rd-down"></div>
+    <div id="bar-left" class="rodape-solido rd-left"></div>
+    <div id="bar-right" class="rodape-solido rd-right"></div>
+
+    <!-- CONFIGURAÇÃO DO ANDROID (SIMULAÇÃO) -->
+    <div id="screen-android" class="sys-settings">
+        <div class="sys-bar"><span onclick="closeSettings()" style="cursor:pointer">←</span> <span>Acesso de Sobreposição</span></div>
+        <div class="sys-row">
+            <span>AirTouch</span>
+            <div id="tg-overlay" class="toggle-btn" onclick="activateOverlay()"></div>
+        </div>
+        <div class="sys-row" style="opacity:0.3;"><span>Outros Apps</span><div class="toggle-btn"></div></div>
+        <p style="padding:20px; color:#6b7280; font-size:0.9rem;">Ao ativar, o AirTouch poderá aparecer sobre outros aplicativos durante o uso.</p>
+    </div>
+
+    <!-- TELA 1: BEM-VINDO -->
+    <div id="scr-welcome" class="screen active">
+        <div class="card">
+            <h1 style="color:var(--blue)">AirTouch</h1>
+            <p>Toque no botão para calibrar o sensor de movimento.</p>
+            <button onclick="navTo('scr-tut')">TESTAR MOVIMENTOS</button>
+        </div>
+    </div>
+
+    <!-- TELA 2: TUTORIAL -->
+    <div id="scr-tut" class="screen">
+        <h3 id="tut-info">Calibração: Mova para os 4 lados</h3>
+        <div class="cam-frame">
+            <video id="vid-tut" autoplay playsinline></video>
+            <div class="aura"></div>
+            <div id="t-up" style="position:absolute; top:10px; left:45%; color:#334155; font-size:1.5rem">↑</div>
+            <div id="t-down" style="position:absolute; bottom:10px; left:45%; color:#334155; font-size:1.5rem">↓</div>
+            <div id="t-left" style="position:absolute; left:10px; top:45%; color:#334155; font-size:1.5rem">←</div>
+            <div id="t-right" style="position:absolute; right:10px; top:45%; color:#334155; font-size:1.5rem">→</div>
+        </div>
+        <button id="btn-tut-next" disabled onclick="navTo('scr-cfg')">PRÓXIMA ETAPA</button>
+    </div>
+
+    <!-- TELA 3: CONFIGURAÇÕES -->
+    <div id="scr-cfg" class="screen">
+        <div class="card">
+            <h2>Configurações</h2>
+            <div class="sys-row" style="background:#1e293b; border-radius:15px; margin-bottom:15px; border:none;">
+                <span>Modo Dedo Indicador</span>
+                <span style="color:var(--green); font-weight:bold;">✓ ATIVO</span>
+            </div>
+            <button onclick="openSettings()" style="background:#1e293b; color:var(--blue); border:1px solid var(--blue)">PERMITIR SOBREPOSIÇÃO</button>
+            <button id="btn-final" disabled onclick="startLoader()">CONCLUIR SETUP</button>
+        </div>
+    </div>
+
+    <!-- TELA 4: CARREGANDO -->
+    <div id="scr-load" class="screen">
+        <div class="loader-ring"></div>
+        <h2 style="margin-top:20px">Sincronizando...</h2>
+    </div>
+
+    <!-- TELA 5: HOME (APP ATIVO) -->
+    <div id="scr-home" class="screen">
+        <div class="cam-frame" id="home-camera-ui">
+            <video id="vid-home" autoplay playsinline></video>
+            <div class="aura"></div>
+        </div>
+        <div class="card">
+            <h3 id="home-status" style="color:var(--green)">SISTEMA ATIVO</h3>
+            <button onclick="toggleCameraView()">MOSTRAR/OCULTAR CÂMERA</button>
+            <button id="btn-stop" style="background:var(--red); color:white" onclick="shutdown()">DESATIVAR AIRTOUCH</button>
+            <button id="btn-restart" style="background:var(--green); color:white; display:none" onclick="location.reload()">REATIVAR</button>
+        </div>
+    </div>
+
+    <script>
+        let calib = { up: false, down: false, left: false, right: false };
+        let setupDone = false;
+        let isRunning = true;
+
+        function navTo(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'scr-tut') startLens('vid-tut');
+            if(id === 'scr-home') startLens('vid-home');
+        }
+
+        function openSettings() { document.getElementById('screen-android').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('screen-android').style.display = 'none'; }
+        
+        function activateOverlay() {
+            setupDone = true;
+            document.getElementById('tg-overlay').classList.add('active');
+            document.getElementById('btn-final').disabled = false;
+            setTimeout(closeSettings, 700);
+        }
+
+        function startLoader() {
+            navTo('scr-load');
+            setTimeout(() => {
+                localStorage.setItem('airtouch_init', 'true');
+                navTo('scr-home');
+            }, 3000);
+        }
+
+        function toggleCameraView() {
+            const el = document.getElementById('home-camera-ui');
+            el.style.opacity = el.style.opacity === '0' ? '1' : '0';
+        }
+
+        function shutdown() {
+            isRunning = false;
+            const v = document.getElementById('vid-home');
+            if(v.srcObject) v.srcObject.getTracks().forEach(t => t.stop());
+            document.getElementById('home-status').innerText = "SISTEMA DESLIGADO";
+            document.getElementById('home-status').style.color = "var(--red)";
+            document.getElementById('btn-stop').style.display = "none";
+            document.getElementById('btn-restart').style.display = "block";
+        }
+
+        async function startLens(id) {
+            const video = document.getElementById(id);
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+
+            const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+            hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.6 });
+
+            hands.onResults((res) => {
+                if(!isRunning) return;
+                if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
+                    const finger = res.multiHandLandmarks[0][8];
+
+                    // Tutorial
+                    if(document.getElementById('scr-tut').classList.contains('active')) {
+                        if(finger.y < 0.25) mark('up');
+                        if(finger.y > 0.75) mark('down');
+                        if(finger.x < 0.25) mark('right');
+                        if(finger.x > 0.75) mark('left');
+                    }
+
+                    // Rodapés Ativos
+                    if(document.getElementById('scr-home').classList.contains('active')) {
+                        renderBars(finger);
+                    }
+                }
+            });
+
+            const camera = new Camera(video, {
+                onFrame: async () => { await hands.send({image: video}); },
+                width: 640, height: 480
+            });
+            camera.start();
+        }
+
+        function mark(dir) {
+            calib[dir] = true;
+            document.getElementById('t-' + dir).style.color = 'var(--green)';
+            if(Object.values(calib).every(v => v)) {
+                document.getElementById('btn-tut-next').disabled = false;
+                document.getElementById('tut-info').innerText = "CALIBRAÇÃO OK!";
+            }
+        }
+
+        function renderBars(f) {
+            document.querySelectorAll('.rodape-solido').forEach(r => r.style.display = 'none');
+            if(f.y < 0.25) document.getElementById('bar-up').style.display = 'block';
+            if(f.y > 0.75) document.getElementById('bar-down').style.display = 'block';
+            if(f.x < 0.25) document.getElementById('bar-right').style.display = 'block';
+            if(f.x > 0.75) document.getElementById('bar-left').style.display = 'block';
+        }
+
+        // Se já configurou antes, pula o tutorial
+        if(localStorage.getItem('airtouch_init')) {
+            setTimeout(() => navTo('scr-home'), 200);
+        }
+    </script>
+</body>
+</html>
